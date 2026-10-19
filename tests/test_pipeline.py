@@ -78,5 +78,6 @@ def test_truth_set_is_well_formed():
     if not truth.exists():
         pytest.skip("run 'make sim' first")
     lines = [l for l in truth.read_text().splitlines() if not l.startswith("#")]
-    assert len(lines) > 100
+    # the CI run simulates a reduced truth set (60 SNVs + 10 indels); the README example uses 460
+    assert len(lines) > 50
     assert all(len(l.split("\t")) >= 5 for l in lines)
