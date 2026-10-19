@@ -1,0 +1,29 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bioinformatics tools
+        run: sudo apt-get update && sudo apt-get install -y bwa samtools bcftools
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      - name: Build reference (2 Mb chr20 slice)
+        run: bash scripts/get_reference.sh
+      - name: Simulate reads
+        run: python scripts/simulate_reads.py --ref data/ref/ref.fa --outdir data/sim --coverage 8 --snvs 60 --indels 10
+      - name: Call and evaluate
+        run: |
+          bash scripts/call_variants.sh
+          python scripts/evaluate.py --truth data/sim/truth.vcf --calls results/calls.vcf.gz \
+            --outdir results --ref data/ref/ref.fa --coverage 8
+      - name: Run tests
+        run: pytest tests -q
